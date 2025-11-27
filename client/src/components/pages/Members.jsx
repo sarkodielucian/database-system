@@ -1,0 +1,629 @@
+import React, { useState, useEffect } from 'react';
+import {
+    Search, Filter, Plus, Download, Upload, MoreVertical,
+    Edit, Trash2, Eye, Mail, Phone, MapPin, User, Camera
+} from 'lucide-react';
+
+export const Members = () => {
+    const [members, setMembers] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterClass, setFilterClass] = useState('all');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [selectedMember, setSelectedMember] = useState(null);
+    const [editingMember, setEditingMember] = useState(null);
+    const [photoPreview, setPhotoPreview] = useState(null);
+
+    // Form state
+    const [formData, setFormData] = useState({
+        firstName: '',
+        lastName: '',
+        class: 'Beginners',
+        phone: '',
+        email: '',
+        address: '',
+        organization: '',
+        status: 'Active',
+        dateOfBirth: '',
+        parentName: '',
+        parentContact: '',
+        photo: ''
+    });
+
+    useEffect(() => {
+        fetchMembers();
+    }, []);
+
+    const fetchMembers = async () => {
+        try {
+            const response = await fetch('http://localhost:5000/api/members');
+            const data = await response.json();
+            setMembers(data);
+        } catch (error) {
+            console.error('Error fetching members:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleInputChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handlePhotoChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            if (file.size > 1024 * 1024) { // 1MB limit
+                alert('Photo size must be less than 1MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setPhotoPreview(reader.result);
+                setFormData({ ...formData, photo: reader.result });
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            firstName: '',
+            lastName: '',
+            class: 'Beginners',
+            phone: '',
+            email: '',
+            address: '',
+            organization: '',
+            status: 'Active',
+            dateOfBirth: '',
+            parentName: '',
+            parentContact: '',
+            photo: ''
+        });
+        setPhotoPreview(null);
+        setEditingMember(null);
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            const url = editingMember
+                ? `http://localhost:5000/api/members/${editingMember.id}`
+                : 'http://localhost:5000/api/members';
+
+            const method = editingMember ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                setShowAddModal(false);
+                resetForm();
+                fetchMembers();
+                alert(editingMember ? 'Member updated successfully!' : 'Member added successfully!');
+            } else {
+                alert('Failed to save member');
+            }
+        } catch (error) {
+            console.error('Error saving member:', error);
+            alert('Error saving member. Please try again.');
+        }
+    };
+
+    const handleEdit = (member) => {
+        setEditingMember(member);
+        setFormData({
+            firstName: member.firstName || '',
+            lastName: member.lastName || '',
+            class: member.class || 'Beginners',
+            phone: member.phone || '',
+            email: member.email || '',
+            address: member.address || '',
+            organization: member.organization || '',
+            status: member.status || 'Active',
+            dateOfBirth: member.dateOfBirth || '',
+            parentName: member.parentName || '',
+            parentContact: member.parentContact || '',
+            photo: member.photo || ''
+        });
+        setPhotoPreview(member.photo || null);
+        setShowAddModal(true);
+    };
+
+    const handleDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this member?')) {
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:5000/api/members/${id}`, {
+                method: 'DELETE'
+            });
+
+            if (response.ok) {
+                fetchMembers();
+                alert('Member deleted successfully!');
+            } else {
+                alert('Failed to delete member');
+            }
+        } catch (error) {
+            console.error('Error deleting member:', error);
+            alert('Error deleting member');
+        }
+    };
+
+    const filteredMembers = members.filter(member => {
+        const fullName = `${member.firstName} ${member.lastName}`.toLowerCase();
+        const matchesSearch = fullName.includes(searchTerm.toLowerCase()) ||
+            (member.email && member.email.toLowerCase().includes(searchTerm.toLowerCase()));
+        const matchesFilter = filterClass === 'all' || member.class === filterClass;
+        return matchesSearch && matchesFilter;
+    });
+
+    // Calculate stats
+    const totalMembers = members.length;
+    const beginnersCount = members.filter(m => m.class === 'Beginners').length;
+    const middleCount = members.filter(m => m.class === 'Middle').length;
+    const seniorCount = members.filter(m => m.class === 'Senior').length;
+
+    return (
+        <div className="space-y-6 fade-in">
+            {/* Page Header */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Members Management</h1>
+                    <p className="text-gray-600 mt-1">Manage all church members and their information</p>
+                </div>
+                <div className="flex items-center gap-3">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors bg-white">
+                        <Upload className="w-4 h-4" />
+                        <span>Import</span>
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors bg-white">
+                        <Download className="w-4 h-4" />
+                        <span>Export</span>
+                    </button>
+                    <button
+                        onClick={() => {
+                            resetForm();
+                            setShowAddModal(true);
+                        }}
+                        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-md"
+                    >
+                        <Plus className="w-4 h-4" />
+                        <span>Add Member</span>
+                    </button>
+                </div>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="card p-6 bg-white">
+                    <p className="text-gray-600 text-sm font-medium">Total Members</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{totalMembers}</h3>
+                    <p className="text-xs text-gray-500 mt-1">All registered members</p>
+                </div>
+                <div className="card p-6 bg-white">
+                    <p className="text-gray-600 text-sm font-medium">Beginners</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{beginnersCount}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{totalMembers ? Math.round((beginnersCount / totalMembers) * 100) : 0}% of total</p>
+                </div>
+                <div className="card p-6 bg-white">
+                    <p className="text-gray-600 text-sm font-medium">Middle</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{middleCount}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{totalMembers ? Math.round((middleCount / totalMembers) * 100) : 0}% of total</p>
+                </div>
+                <div className="card p-6 bg-white">
+                    <p className="text-gray-600 text-sm font-medium">Senior</p>
+                    <h3 className="text-3xl font-bold text-gray-900 mt-2">{seniorCount}</h3>
+                    <p className="text-xs text-gray-500 mt-1">{totalMembers ? Math.round((seniorCount / totalMembers) * 100) : 0}% of total</p>
+                </div>
+            </div>
+
+            {/* Filters and Search */}
+            <div className="card p-6 bg-white">
+                <div className="flex flex-col md:flex-row gap-4">
+                    <div className="flex-1">
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Search by name or email..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Filter className="w-5 h-5 text-gray-400" />
+                        <select
+                            value={filterClass}
+                            onChange={(e) => setFilterClass(e.target.value)}
+                            className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="all">All Classes</option>
+                            <option value="Beginners">Beginners</option>
+                            <option value="Middle">Middle</option>
+                            <option value="Senior">Senior</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            {/* Members Table */}
+            <div className="card overflow-hidden bg-white">
+                <div className="overflow-x-auto">
+                    <table className="w-full">
+                        <thead className="bg-gray-50 border-b border-gray-200">
+                            <tr>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Member</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Class</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Organization</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th className="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                            {loading ? (
+                                <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Loading members...</td></tr>
+                            ) : filteredMembers.length === 0 ? (
+                                <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">No members found</td></tr>
+                            ) : (
+                                filteredMembers.map((member) => (
+                                    <tr key={member.id} className="hover:bg-gray-50 transition-colors">
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center">
+                                                {member.photo ? (
+                                                    <img
+                                                        src={member.photo}
+                                                        alt={`${member.firstName} ${member.lastName}`}
+                                                        className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0 font-bold">
+                                                        {member.firstName[0]}{member.lastName[0]}
+                                                    </div>
+                                                )}
+                                                <div className="ml-4">
+                                                    <div className="text-sm font-medium text-gray-900">{member.firstName} {member.lastName}</div>
+                                                    <div className="text-xs text-gray-500">ID: {member.id}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.class === 'Beginners' ? 'bg-blue-100 text-blue-800' :
+                                                    member.class === 'Middle' ? 'bg-purple-100 text-purple-800' :
+                                                        'bg-green-100 text-green-800'
+                                                }`}>
+                                                {member.class}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <Phone className="w-3 h-3" />
+                                                    {member.phone || '-'}
+                                                </div>
+                                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                                    <Mail className="w-3 h-3" />
+                                                    {member.email || '-'}
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                            {member.organization || 'None'}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${member.status === 'Active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                                }`}>
+                                                {member.status}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() => setSelectedMember(member)}
+                                                    className="p-2 hover:bg-blue-50 rounded-lg transition-colors"
+                                                    title="View Details"
+                                                >
+                                                    <Eye className="w-4 h-4 text-blue-600" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleEdit(member)}
+                                                    className="p-2 hover:bg-green-50 rounded-lg transition-colors"
+                                                    title="Edit"
+                                                >
+                                                    <Edit className="w-4 h-4 text-green-600" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(member.id)}
+                                                    className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete"
+                                                >
+                                                    <Trash2 className="w-4 h-4 text-red-600" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* Member Detail Modal */}
+            {selectedMember && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                        <div className="bg-blue-600 p-6 text-white rounded-t-xl">
+                            <div className="flex items-start justify-between">
+                                <div className="flex items-center gap-4">
+                                    {selectedMember.photo ? (
+                                        <img
+                                            src={selectedMember.photo}
+                                            alt={`${selectedMember.firstName} ${selectedMember.lastName}`}
+                                            className="w-16 h-16 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center text-2xl font-bold">
+                                            {selectedMember.firstName[0]}{selectedMember.lastName[0]}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white">{selectedMember.firstName} {selectedMember.lastName}</h3>
+                                        <p className="text-blue-100 text-sm">Member ID: {selectedMember.id}</p>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setSelectedMember(null)}
+                                    className="text-white hover:bg-white/20 p-2 rounded-lg transition-colors"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="p-6 space-y-6">
+                            <div className="grid grid-cols-2 gap-6">
+                                <div>
+                                    <p className="text-sm text-gray-500">Class</p>
+                                    <p className="text-gray-900 mt-1 font-medium">{selectedMember.class}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Status</p>
+                                    <p className="text-gray-900 mt-1 font-medium">{selectedMember.status}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Phone</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.phone || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Email</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.email || '-'}</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <p className="text-sm text-gray-500">Address</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.address || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Organization</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.organization || 'None'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Join Date</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.joinDate || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Parent Name</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.parentName || '-'}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Parent Contact</p>
+                                    <p className="text-gray-900 mt-1">{selectedMember.parentContact || '-'}</p>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-4 border-t border-gray-100">
+                                <button
+                                    onClick={() => {
+                                        setSelectedMember(null);
+                                        handleEdit(selectedMember);
+                                    }}
+                                    className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all shadow-sm"
+                                >
+                                    Edit Profile
+                                </button>
+                                <button
+                                    onClick={() => setSelectedMember(null)}
+                                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-gray-700"
+                                >
+                                    Close
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Add/Edit Member Modal */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-gray-900">
+                                {editingMember ? 'Edit Member' : 'Add New Member'}
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setShowAddModal(false);
+                                    resetForm();
+                                }}
+                                className="text-gray-400 hover:text-gray-600"
+                            >
+                                <Plus size={24} className="rotate-45" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+                            {/* Photo Upload */}
+                            <div className="flex flex-col items-center gap-4">
+                                <div className="relative">
+                                    {photoPreview ? (
+                                        <img
+                                            src={photoPreview}
+                                            alt="Preview"
+                                            className="w-24 h-24 rounded-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center">
+                                            <Camera className="w-8 h-8 text-gray-400" />
+                                        </div>
+                                    )}
+                                    <label
+                                        htmlFor="photo-upload"
+                                        className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition-colors"
+                                    >
+                                        <Camera className="w-4 h-4" />
+                                    </label>
+                                    <input
+                                        id="photo-upload"
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handlePhotoChange}
+                                        className="hidden"
+                                    />
+                                </div>
+                                <p className="text-xs text-gray-500">Click camera icon to upload photo (max 1MB)</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">First Name *</label>
+                                    <input
+                                        type="text"
+                                        name="firstName"
+                                        required
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.firstName}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Last Name *</label>
+                                    <input
+                                        type="text"
+                                        name="lastName"
+                                        required
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.lastName}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
+                                    <select
+                                        name="class"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.class}
+                                        onChange={handleInputChange}
+                                    >
+                                        <option value="Beginners">Beginners</option>
+                                        <option value="Middle">Middle</option>
+                                        <option value="Senior">Senior</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Organization</label>
+                                    <input
+                                        type="text"
+                                        name="organization"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.organization}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input
+                                        type="text"
+                                        name="phone"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.phone}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input
+                                        type="email"
+                                        name="email"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.email}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Parent Name</label>
+                                    <input
+                                        type="text"
+                                        name="parentName"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.parentName}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Parent Contact</label>
+                                    <input
+                                        type="text"
+                                        name="parentContact"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.parentContact}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                        value={formData.address}
+                                        onChange={handleInputChange}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowAddModal(false);
+                                        resetForm();
+                                    }}
+                                    className="px-4 py-2 text-gray-700 hover:bg-slate-50 rounded-lg transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    {editingMember ? 'Update Member' : 'Save Member'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
