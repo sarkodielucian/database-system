@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { MessageSquare, Send, Users, Calendar, CheckCircle, Clock } from 'lucide-react';
 
 export function BulkSMS() {
@@ -18,17 +19,17 @@ export function BulkSMS() {
     const fetchData = async () => {
         try {
             // Fetch stats
-            const statsRes = await fetch('http://localhost:5000/api/sms/stats');
+            const statsRes = await fetch(`${API_BASE_URL}/api/sms/stats');
             const statsData = await statsRes.json();
             setStats(statsData);
 
             // Fetch recent messages
-            const messagesRes = await fetch('http://localhost:5000/api/sms/messages');
+            const messagesRes = await fetch(`${API_BASE_URL}/api/sms/messages');
             const messagesData = await messagesRes.json();
             setRecentMessages(messagesData.slice(0, 5));
 
             // Fetch templates
-            const templatesRes = await fetch('http://localhost:5000/api/sms/templates');
+            const templatesRes = await fetch(`${API_BASE_URL}/api/sms/templates');
             const templatesData = await templatesRes.json();
             setTemplates(templatesData);
 
@@ -46,7 +47,7 @@ export function BulkSMS() {
         }
 
         try {
-            await fetch('http://localhost:5000/api/sms/messages', {
+            await fetch(`${API_BASE_URL}/api/sms/messages', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

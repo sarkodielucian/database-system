@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import {
     Search, Filter, Plus, Download, Upload, MoreVertical,
     Edit, Trash2, Eye, Mail, Phone, MapPin, User, Camera
@@ -36,7 +37,7 @@ export const Members = () => {
 
     const fetchMembers = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/members');
+            const response = await fetch(`${API_BASE_URL}/api/members');
             const data = await response.json();
             setMembers(data);
         } catch (error) {
@@ -90,8 +91,8 @@ export const Members = () => {
         e.preventDefault();
         try {
             const url = editingMember
-                ? `http://localhost:5000/api/members/${editingMember.id}`
-                : 'http://localhost:5000/api/members';
+                ? `${API_BASE_URL}/api/members/${editingMember.id}`
+                : `${API_BASE_URL}/api/members';
 
             const method = editingMember ? 'PUT' : 'POST';
 
@@ -141,7 +142,7 @@ export const Members = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/members/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/members/${id}`, {
                 method: 'DELETE'
             });
 

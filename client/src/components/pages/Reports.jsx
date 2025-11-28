@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { FileText, Download, Calendar, TrendingUp, Users, DollarSign } from 'lucide-react';
 
 export function Reports() {
@@ -42,7 +43,7 @@ export function Reports() {
 
     const fetchRecentReports = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/analytics/reports');
+            const response = await fetch(`${API_BASE_URL}/api/analytics/reports');
             const data = await response.json();
             setRecentReports(data);
         } catch (error) {
@@ -58,7 +59,7 @@ export function Reports() {
 
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/api/analytics/reports', {
+            const response = await fetch(`${API_BASE_URL}/api/analytics/reports', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

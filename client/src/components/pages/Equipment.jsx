@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { Package, Plus, Search, Filter, AlertCircle, CheckCircle, Clock } from 'lucide-react';
 
 export function Equipment() {
@@ -20,13 +21,13 @@ export function Equipment() {
     const fetchData = async () => {
         try {
             // Fetch stats
-            const statsRes = await fetch('http://localhost:5000/api/equipment/stats');
+            const statsRes = await fetch(`${API_BASE_URL}/api/equipment/stats');
             const statsData = await statsRes.json();
             setStats(statsData);
 
             // Fetch equipment
             const equipmentRes = await fetch(
-                `http://localhost:5000/api/equipment${categoryFilter !== 'All Categories' ? `?category=${categoryFilter}` : ''}`
+                `${API_BASE_URL}/api/equipment${categoryFilter !== 'All Categories' ? `?category=${categoryFilter}` : ''}`
             );
             const equipmentData = await equipmentRes.json();
             setEquipment(equipmentData);
@@ -64,7 +65,7 @@ export function Equipment() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:5000/api/equipment', {
+            const response = await fetch(`${API_BASE_URL}/api/equipment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)

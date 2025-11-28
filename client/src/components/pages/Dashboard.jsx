@@ -7,6 +7,7 @@ import {
     LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
     XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
+import { API_BASE_URL } from '../config';
 
 export const Dashboard = () => {
     const [stats, setStats] = useState({
@@ -25,7 +26,7 @@ export const Dashboard = () => {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const response = await fetch('http://localhost:5000/api/dashboard/stats');
+                const response = await fetch(`${API_BASE_URL}/api/dashboard/stats`);
                 const data = await response.json();
                 setStats(prev => ({
                     ...prev,

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { API_BASE_URL } from '../../config';
 import { User, Mail, Phone, Building, Lock, Camera, Save, Eye, EyeOff } from 'lucide-react';
 import { toast, Toaster } from 'sonner';
 
@@ -121,7 +122,7 @@ export function AdminProfile() {
 
         // Simulate password update - in production, call API here
         try {
-            const response = await fetch('http://localhost:5000/api/auth/change-password', {
+            const response = await fetch(`${API_BASE_URL}/api/auth/change-password', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

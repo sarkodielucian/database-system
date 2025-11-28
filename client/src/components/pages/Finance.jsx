@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { DollarSign, TrendingUp, TrendingDown, Plus, Download, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -17,22 +18,22 @@ export function Finance() {
     const fetchFinancialData = async () => {
         try {
             // Fetch summary
-            const summaryRes = await fetch('http://localhost:5000/api/finance/summary');
+            const summaryRes = await fetch(`${API_BASE_URL}/api/finance/summary');
             const summaryData = await summaryRes.json();
             setSummary(summaryData);
 
             // Fetch monthly data
-            const monthlyRes = await fetch('http://localhost:5000/api/finance/monthly-data');
+            const monthlyRes = await fetch(`${API_BASE_URL}/api/finance/monthly-data');
             const monthlyDataRes = await monthlyRes.json();
             setMonthlyData(monthlyDataRes);
 
             // Fetch expense categories
-            const categoriesRes = await fetch('http://localhost:5000/api/finance/expense-categories');
+            const categoriesRes = await fetch(`${API_BASE_URL}/api/finance/expense-categories');
             const categoriesData = await categoriesRes.json();
             setExpenseCategories(categoriesData);
 
             // Fetch recent transactions
-            const transactionsRes = await fetch('http://localhost:5000/api/finance/transactions?limit=10');
+            const transactionsRes = await fetch(`${API_BASE_URL}/api/finance/transactions?limit=10');
             const transactionsData = await transactionsRes.json();
             setTransactions(transactionsData);
 
@@ -64,8 +65,8 @@ export function Finance() {
         e.preventDefault();
         try {
             const endpoint = transactionType === 'income'
-                ? 'http://localhost:5000/api/finance/donations'
-                : 'http://localhost:5000/api/finance/expenses';
+                ? `${API_BASE_URL}/api/finance/donations'
+                : `${API_BASE_URL}/api/finance/expenses';
 
             const payload = {
                 ...formData,

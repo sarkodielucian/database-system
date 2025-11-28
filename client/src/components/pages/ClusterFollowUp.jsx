@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { UsersRound, Plus, Search, Calendar, Phone, MessageSquare, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 export function ClusterFollowUp() {
@@ -21,17 +22,17 @@ export function ClusterFollowUp() {
     const fetchData = async () => {
         try {
             // Fetch stats
-            const statsRes = await fetch('http://localhost:5000/api/clusters/stats');
+            const statsRes = await fetch(`${API_BASE_URL}/api/clusters/stats');
             const statsData = await statsRes.json();
             setStats(statsData);
 
             // Fetch clusters
-            const clustersRes = await fetch('http://localhost:5000/api/clusters/clusters');
+            const clustersRes = await fetch(`${API_BASE_URL}/api/clusters/clusters');
             const clustersData = await clustersRes.json();
             setClusters(clustersData);
 
             // Fetch follow-ups
-            const followUpsRes = await fetch('http://localhost:5000/api/clusters/followups');
+            const followUpsRes = await fetch(`${API_BASE_URL}/api/clusters/followups');
             const followUpsData = await followUpsRes.json();
             setFollowUps(followUpsData);
 
@@ -44,7 +45,7 @@ export function ClusterFollowUp() {
 
     const handleCompleteFollowUp = async (id) => {
         try {
-            await fetch(`http://localhost:5000/api/clusters/followups/${id}`, {
+            await fetch(`${API_BASE_URL}/api/clusters/followups/${id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: 'Completed' })

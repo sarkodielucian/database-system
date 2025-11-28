@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { Settings as SettingsIcon, Church, Users, Bell, Lock, Database, Globe } from 'lucide-react';
 
 export function Settings() {
@@ -17,7 +18,7 @@ export function Settings() {
 
     const fetchSettings = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/settings');
+            const response = await fetch(`${API_BASE_URL}/api/settings');
             const data = await response.json();
 
             if (data.emailNotifications !== undefined) setEmailNotifications(data.emailNotifications === 'true');
@@ -71,7 +72,7 @@ export function Settings() {
 
     const handleSaveSettings = async (setting, value) => {
         try {
-            await fetch('http://localhost:5000/api/settings', {
+            await fetch(`${API_BASE_URL}/api/settings', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ key: setting, value: String(value) })

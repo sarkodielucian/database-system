@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import {
     Search, Filter, Plus, Download, Upload, MoreVertical,
     Edit, Trash2, Eye, Mail, Phone, MapPin, User, Camera, Calendar
@@ -33,7 +34,7 @@ export const Visitors = () => {
 
     const fetchVisitors = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/visitors');
+            const response = await fetch(`${API_BASE_URL}/api/visitors');
             const data = await response.json();
             setVisitors(Array.isArray(data) ? data : []);
         } catch (error) {
@@ -85,8 +86,8 @@ export const Visitors = () => {
         e.preventDefault();
         try {
             const url = editingVisitor
-                ? `http://localhost:5000/api/visitors/${editingVisitor.id}`
-                : 'http://localhost:5000/api/visitors';
+                ? `${API_BASE_URL}/api/visitors/${editingVisitor.id}`
+                : `${API_BASE_URL}/api/visitors';
 
             const method = editingVisitor ? 'PUT' : 'POST';
 
@@ -133,7 +134,7 @@ export const Visitors = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/visitors/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/visitors/${id}`, {
                 method: 'DELETE'
             });
 

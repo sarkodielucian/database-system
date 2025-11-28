@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import { Bell, Check, Info, Calendar, Heart, Award } from 'lucide-react';
 
 const Notifications = () => {
@@ -7,7 +8,7 @@ const Notifications = () => {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/notifications');
+            const response = await fetch(`${API_BASE_URL}/api/notifications');
             const data = await response.json();
             setNotifications(data);
             setLoading(false);
@@ -19,7 +20,7 @@ const Notifications = () => {
 
     const markAsRead = async (id) => {
         try {
-            await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+            await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, {
                 method: 'PUT'
             });
             setNotifications(notifications.map(n =>
@@ -33,7 +34,7 @@ const Notifications = () => {
     const runChecks = async () => {
         try {
             setLoading(true);
-            await fetch('http://localhost:5000/api/notifications/check', {
+            await fetch(`${API_BASE_URL}/api/notifications/check', {
                 method: 'POST'
             });
             await fetchNotifications();

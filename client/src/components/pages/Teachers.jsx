@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE_URL } from '../../config';
 import {
     Search, Filter, Plus, Download, Upload, MoreVertical,
     Edit, Trash2, Eye, Mail, Phone, MapPin, User, Camera, Award
@@ -45,7 +46,7 @@ export const Teachers = () => {
 
     const fetchTeachers = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/teachers');
+            const response = await fetch(`${API_BASE_URL}/api/teachers');
             const data = await response.json();
             setTeachers(Array.isArray(data) ? data : []);
         } catch (error) {
@@ -102,8 +103,8 @@ export const Teachers = () => {
         e.preventDefault();
         try {
             const url = editingTeacher
-                ? `http://localhost:5000/api/teachers/${editingTeacher.id}`
-                : 'http://localhost:5000/api/teachers';
+                ? `${API_BASE_URL}/api/teachers/${editingTeacher.id}`
+                : `${API_BASE_URL}/api/teachers';
 
             const method = editingTeacher ? 'PUT' : 'POST';
 
@@ -155,7 +156,7 @@ export const Teachers = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:5000/api/teachers/${id}`, {
+            const response = await fetch(`${API_BASE_URL}/api/teachers/${id}`, {
                 method: 'DELETE'
             });
 
